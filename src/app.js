@@ -248,6 +248,9 @@ async function parseSmmx(buf, fileName = '') {
   }
   if (!xmlPath) throw new Error('Il file non contiene una mappa SimpleMind (.smmx) valida.');
   const xmlText = await zip.file(xmlPath).async('string');
+  const hasBom = xmlText.charCodeAt(0) === 0xFEFF;
+  const crlf = /\r\n/.test(xmlText.slice(0, 400));
+  const declM = /^\uFEFF?(<\?xml[^>]*\?>)/.exec(xmlText); const decl = declM ? declM[1] : null;
   const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
   if (xml.getElementsByTagName('parsererror').length) throw new Error('XML della mappa non leggibile.');
   const mm = xml.getElementsByTagName('mindmap')[0];
@@ -273,7 +276,7 @@ async function parseSmmx(buf, fileName = '') {
     const n = newNode({
       id, parent: el.getAttribute('parent') ?? '-1',
       x: parseFloat(el.getAttribute('x')) || 0, y: parseFloat(el.getAttribute('y')) || 0,
-      text: decodeText(el.getAttribute('text')), note: decodeText(rawNote),
+      text: decodeText(el.getAttribute('text')), note: trimNote(decodeText(rawNote)),
       palette: el.getAttribute('palette'), guid: el.getAttribute('guid') || smGuid(),
       hasImage: !!childEl(el, 'image'), hasLink: !!childEl(el, 'link'),
     });
@@ -291,8 +294,9 @@ async function parseSmmx(buf, fileName = '') {
 
   if (sidecar) applySidecar(d, sidecar);
   const relations = readRelations(mm);
-  return { doc: d, session: { zip, xml, xmlPath, elMap, noteUsesN, fileName, handle: null, relations } };
+  return { doc: d, session: { zip, xml, xmlPath, elMap, noteUsesN, fileName, handle: null, relations, hasBom, crlf, decl } };
 }
+function trimNote(s) { return (s || '').replace(/^\r?\n/, '').replace(/\r?\n$/, ''); }
 function childEl(parent, tag) { if (!parent) return null; for (const c of parent.children) if (c.tagName === tag) return c; return null; }
 function readRelations(mm) {
   const rel = childEl(mm, 'relations'); if (!rel) return [];
@@ -383,8 +387,11 @@ async function buildSmmx() {
     el.setAttribute('text', encodeText(n.text));
     let noteEl = childEl(el, 'note');
     if (n.note) {
-      if (!noteEl) { noteEl = xml.createElement('note'); el.insertBefore(noteEl, el.firstChild); }
-      noteEl.textContent = session.noteUsesN ? encodeText(n.note) : n.note;
+      const same = noteEl && trimNote(decodeText(noteEl.textContent)) === n.note;
+      if (!same) {
+        if (!noteEl) { noteEl = xml.createElement('note'); el.insertBefore(noteEl, el.firstChild); }
+        noteEl.textContent = '\n' + (session.noteUsesN ? encodeText(n.note) : n.note) + '\n';
+      }
     } else if (noteEl) noteEl.remove();
     topicsEl.append(el, xml.createTextNode('\n'));
   }
@@ -394,9 +401,11 @@ async function buildSmmx() {
     if ((s != null && !doc.nodes[s]) || (t != null && !doc.nodes[t])) r.remove();
   }
   let str = new XMLSerializer().serializeToString(xml);
-  str = str.replace(/^(<\?xml[^>]*\?>)?\s*(<!DOCTYPE[^>]*>)?\s*/, (m, decl, dt) => '<?xml version="1.0" encoding="utf-8"?>\n' + (dt ? dt + '\n' : ''));
-  session.zip.file(session.xmlPath, str);
-  session.zip.file(SIDECAR_PATH, JSON.stringify(buildSidecar()));
+  str = str.replace(/^(<\?xml[^>]*\?>)?\s*(<!DOCTYPE[^>]*>)?\s*/, (m, decl, dt) => (session.decl || '<?xml version="1.0" encoding="utf-8"?>') + '\n' + (dt ? dt + '\n' : ''));
+  if (session.crlf) str = str.replace(/\r?\n/g, '\r\n');
+  if (session.hasBom) str = '\uFEFF' + str;
+  session.zip.file(session.xmlPath, str, { createFolders: false });
+  session.zip.file(SIDECAR_PATH, JSON.stringify(buildSidecar()), { createFolders: false });
   return session.zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: 'application/octet-stream' });
 }
 
