@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3b6cf6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MindAI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='12' fill='%233b6cf6'/%3E%3Ccircle cx='10' cy='14' r='7' fill='%23e8590c'/%3E%3Ccircle cx='54' cy='14' r='7' fill='%232f9e44'/%3E%3Ccircle cx='10' cy='50' r='7' fill='%23ae3ec9'/%3E%3Ccircle cx='54' cy='50' r='7' fill='%231c7ed6'/%3E%3Cpath d='M16 18L26 27M48 18L38 27M16 46L26 37M48 46L38 37' stroke='%23555' stroke-width='3'/%3E%3C/svg%3E">
+<style>/*STYLE*/</style>
+</head>
+<body>
+<div id="topbar">
+  <button class="tbtn" id="menu-btn" title="Menu"><span class="ico">☰</span></button>
+  <div class="brand">Mind<span>AI</span></div>
+  <input id="doc-title" type="text" value="" aria-label="Titolo della mappa">
+  <div class="tb-group">
+    <button class="tbtn" id="undo-btn" title="Annulla (Ctrl+Z)"><span class="ico">↶</span></button>
+    <button class="tbtn" id="redo-btn" title="Ripeti (Ctrl+Y)"><span class="ico">↷</span></button>
+    <button class="tbtn" id="save-btn" title="Salva .smmx (Ctrl+S)"><span class="ico">💾</span></button>
+  </div>
+  <span id="save-state"></span>
+  <div class="spacer"></div>
+  <div class="tb-group">
+    <button class="tbtn" data-panel="outline" title="Outline"><span class="ico">☰</span><span class="lbl">Outline</span></button>
+    <button class="tbtn" data-panel="note" title="Nota"><span class="ico">📝</span><span class="lbl">Nota</span></button>
+    <button class="tbtn" data-panel="icon" title="Icona"><span class="ico">⭐</span><span class="lbl">Icona</span></button>
+    <button class="tbtn" data-panel="sheet" title="Foglio di stile"><span class="ico">🎨</span><span class="lbl">Foglio di stile</span></button>
+    <button class="tbtn" data-panel="style" title="Stile"><span class="ico">🖌️</span><span class="lbl">Stile</span></button>
+    <button class="tbtn" data-panel="present" title="Presentazione"><span class="ico">▶</span><span class="lbl">Presentazione</span></button>
+    <button class="tbtn ai" data-panel="ai" title="IA (Ctrl+I)"><span class="ico">✨</span><span class="lbl">IA</span></button>
+  </div>
+</div>
+<div id="stage"><div id="world"><svg id="edges" width="1" height="1"></svg></div></div>
+<aside id="panel">
+  <header><span id="panel-title"></span><button class="close" id="panel-close" title="Chiudi">×</button></header>
+  <div class="body" id="panel-body"></div>
+  <div class="ai-compose" id="panel-compose" style="display:none"></div>
+</aside>
+<div id="zoombar"><button id="zoom-out" title="Riduci">−</button><button id="zoom-fit" title="Adatta">⤢</button><button id="zoom-in" title="Ingrandisci">+</button></div>
+<div id="fab">
+  <button id="fab-child" title="Nuovo figlio (Tab)">＋ Figlio</button>
+  <button id="fab-sib" title="Nuovo fratello (Invio)">↧ Fratello</button>
+  <button id="fab-edit" title="Modifica (F2)">✏️</button>
+  <button id="fab-ai" title="IA">✨</button>
+  <button id="fab-del" title="Elimina">🗑</button>
+</div>
+<div id="present-bar"><button id="present-prev">◀</button><span id="present-pos"></span><button id="present-next">▶</button><button id="present-exit">✕</button></div>
+<input type="file" id="file-input" accept=".smmx,application/octet-stream,application/zip" hidden>
+<script>/*JSZIP*/</script>
+<script>/*APP*/</script>
+</body>
+</html>

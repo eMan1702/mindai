@@ -1,0 +1,18 @@
+services:
+  mindai:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c", "wget -qO /usr/share/nginx/html/index.html https://raw.githubusercontent.com/eMan1702/mindai/main/index.html && exec nginx -g 'daemon off;'"]
+    networks:
+      - n8n_default
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.mindai.rule=Host(`mindai.biolife-benessere.it`)
+      - traefik.http.routers.mindai.entrypoints=web,websecure
+      - traefik.http.routers.mindai.tls=true
+      - traefik.http.routers.mindai.tls.certresolver=mytlschallenge
+      - traefik.http.services.mindai.loadbalancer.server.port=80
+networks:
+  n8n_default:
+    external: true
